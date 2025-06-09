@@ -226,6 +226,44 @@
     .toggle-btn:hover {
       background-color: #004d40;
     }
+    
+    section h2 {
+  color: #004d40;
+  text-align: center;
+}
+
+section p {
+  text-align: center;
+  font-size: 16px;
+  margin-bottom: 20px;
+}
+
+.highlight {
+  background-color: #e0f2f1;
+  padding: 15px;
+  border-left: 5px solid #00796b;
+  margin: 10px 0;
+  transition: background-color 0.3s, border-color 0.3s;
+}
+
+.highlight em {
+  font-style: italic;
+}
+
+.official-badge {
+  display: block;
+  text-align: center;
+  background-color: #00796b;
+  color: white;
+  padding: 10px 20px;
+  text-decoration: none;
+  border-radius: 5px;
+  margin-top: 20px;
+}
+
+.official-badge:hover {
+  background-color: #004d40;
+}
 
   </style>
   
@@ -355,7 +393,7 @@
   <h2>Agenda Waktu Kegiatan</h2>
   <ul>
     <li><strong>Harian:</strong> Piket Masjid</li>
-    <li><strong>Mingguan:</strong> Shalat Dhuha Berjamaah, Kumpulan Rutin dan Infak Jum'at</li>
+    <li><strong>Mingguan:</strong> Shalat Dhuha Berjamaah, Kumpulan rutin</li>
     <li><strong>Bulanan:</strong> Cuci Karpet, Program evaluasi, Kritik, Saran, dan Harapan</li>
     <li><strong>Tahunan:</strong> Maulid Nabi Muhammad SAW, Pesantren Kilat, LDKI</li>
   </ul>
@@ -391,6 +429,43 @@
   <h2>Gabung bersama GARIS!</h2>
   <p>Ingin menjadi bagian dari GARIS atau ikut kegiatan kami?</p>
   <a href="https://docs.google.com/forms/d/1OenExzAN9NtZOrwxQRwcV0Pazpvk7aPRJ2G9kSJo5gM/edit" target="_blank" class="official-badge">Isi Formulir Pendaftaran</a>
+</section>
+
+<section>
+  <h2>Menfess GARIS 💬</h2>
+  <p>Kirimkan pesan anonimmu di bawah ini, apakah itu curhat, harapan, atau hanya candaan seru. Kami akan menampilkannya di sini!</p>
+
+  <h3>Pesan Terkirim</h3>
+  
+  <section id="menfess-section">
+  <div id="menfess-list">Memuat pesan...</div>
+</section>
+
+<script>
+  fetch("https://script.google.com/macros/s/AKfycbw2kGgOMmrCER2btP0HSewy19lv1jL_zwsLhemQCD-D-dbQrIrz9u7hi-9xOxJLDyfA/exec") // Ganti dengan URL kamu
+    .then(res => res.json())
+    .then(data => {
+      const container = document.getElementById("menfess-list");
+      container.innerHTML = "";
+
+      data.reverse().forEach(item => {
+        const card = document.createElement("div");
+        card.className = "highlight";
+        card.innerHTML = `
+          <p><em>"${item.pesan}"</em></p>
+          <p><strong>${item.kategori}</strong> - <small>${new Date(item.tanggal).toLocaleDateString()}</small></p>
+        `;
+        container.appendChild(card);
+      });
+    })
+    .catch(err => {
+      document.getElementById("menfess-list").innerText = "Gagal memuat pesan 😢";
+      console.error(err);
+    });
+</script>
+
+  <!-- Tombol untuk Kirim Menfess -->
+  <a href="https://docs.google.com/forms/d/e/1FAIpQLSdth7OvekjZI13h65NoWZD2-8Q1RP0j9RKlhUzyUitmQUMzsg/viewform" target="_blank" class="official-badge">Kirim Menfess Anonim</a>
 </section>
 
 <section>

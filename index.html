@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
   <title>GARIS DKM SMAN 1 Ciwidey</title>
   <style>
+  img {
+    pointer-events: none;
+    user-select: none;
+    -webkit-user-drag: none;
+  }
     /
     body {
       font-family: 'Segoe UI', sans-serif;
@@ -863,9 +868,17 @@ font-family: Arial, sans-serif;
 </script>
 
 <footer>
-  <p>&copy; 2025 GARIS DKM SMAN 1 Ciwidey. All rights reserved.</p>
-  <p>Website dibuat oleh <strong>Ferdiyanto Widho Sadewo</strong>.</p>
+  <p style="text-align: center; font-size: 12px; color: gray; line-height: 1.6;">
+    © 2025 GARIS SMAN 1 CIWIDEY. Seluruh konten dan gambar dilindungi oleh hak cipta.<br>
+    Dilarang mengunduh, menyimpan, atau menggunakan ulang tanpa izin tertulis dari pihak terkait.<br><br>
+    Website ini dirancang dan dikembangkan oleh <strong>Ferdiyanto</strong> — Ketua GARIS DKM SMAN 1 CIWIDEY.
+  </p>
 </footer>
 
+<script>
+  document.addEventListener("contextmenu", function (e) {
+    e.preventDefault();
+  });
+</script>
 </body>
 </html>

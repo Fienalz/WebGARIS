@@ -330,6 +330,44 @@ font-family: Arial, sans-serif;
     }
   </style>
   
+  <style>
+  .rating {
+    direction: rtl;
+    unicode-bidi: bidi-override;
+    font-size: 2rem;
+    display: inline-flex;
+    gap: 5px;
+  }
+  .rating input {
+    display: none;
+  }
+  .rating label {
+    color: #ccc;
+    cursor: pointer;
+    transition: color 0.2s;
+  }
+  .rating input:checked ~ label,
+  .rating label:hover,
+  .rating label:hover ~ label {
+    color: gold;
+  }
+  
+  #commentForm input, #commentForm textarea {
+    width: 100%;
+    padding: 8px;
+    margin-bottom: 10px;
+  }
+  #commentList {
+    list-style: none;
+    padding-left: 0;
+  }
+  #commentList li {
+    background: #f2f2f2;
+    padding: 10px;
+    margin-bottom: 8px;
+    border-radius: 8px;
+  }
+</style>
 </head>
 <script>
   // Mode Gelap Otomatis Berdasarkan Waktu
@@ -347,6 +385,25 @@ font-family: Arial, sans-serif;
     const isDark = document.body.classList.contains('dark-mode');
     document.getElementById('toggleThemeBtn').textContent = isDark ? "Mode Terang" : "Mode Gelap";
   });
+</script>
+
+<!-- Firebase SDK -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyB8_VO5pyLPVafUrEIZeRJiy14zPDnV8qk",
+    authDomain: "garis-dkm.firebaseapp.com",
+    databaseURL: "https://garis-dkm-default-rtdb.asia-southeast1.firebasedatabase.app",
+    projectId: "garis-dkm",
+    storageBucket: "garis-dkm.firebasestorage.app",
+    messagingSenderId: "21773078143",
+    appId: "1:21773078143:web:6ba2fddff37154c573f94a"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.database();
 </script>
 
 <body>
@@ -830,6 +887,49 @@ font-family: Arial, sans-serif;
   <h3 id="countdown" style="text-align:center; color:#00796b;"></h3>
 </section>
 
+<section>
+ <h2>Tinggalkan Komentar</h2>
+<form id="commentForm">
+  <input type="text" id="commentName" placeholder="Nama kamu" required><br><br>
+  <textarea id="commentText" placeholder="Tulis komentarmu..." required></textarea><br><br>
+  <button type="button" onclick="submitComment()">Kirim Komentar</button>
+</form>
+
+<h3>Komentar Terbaru</h3>
+<ul id="commentList"></ul>
+<button id="showMoreBtn" onclick="showMoreComments()" style="display:none;">Baca lebih banyak komentar</button>
+</section>
+
+<h2>Beri Rating Website Kami</h2>
+<form id="ratingForm">
+  <label>Pilih Rating:</label><br>
+  <div class="rating" id="ratingForm">
+  <input type="radio" name="star" id="star5" value="5"><label for="star5">★</label>
+  <input type="radio" name="star" id="star4" value="4"><label for="star4">★</label>
+  <input type="radio" name="star" id="star3" value="3"><label for="star3">★</label>
+  <input type="radio" name="star" id="star2" value="2"><label for="star2">★</label>
+  <input type="radio" name="star" id="star1" value="1"><label for="star1">★</label>
+</div><br>
+
+  <button type="button" onclick="submitRating()" id="submitBtn">Kirim Rating</button>
+</form>
+
+<p id="result">Memuat rating...</p>
+
+<div id="toast" style="
+  display: none;
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  background-color: #4caf50;
+  color: white;
+  padding: 12px 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+  font-size: 16px;
+  z-index: 9999;
+"></div>
+
 <script>
   // Hitung mundur tanggal besar
   const targetDate = new Date("2025-09-05T00:00:00").getTime();
@@ -879,6 +979,156 @@ font-family: Arial, sans-serif;
   document.addEventListener("contextmenu", function (e) {
     e.preventDefault();
   });
+</script>
+
+<script>
+  const ratingForm = document.getElementById("ratingForm");
+  const submitBtn = document.getElementById("submitBtn");
+  const resultEl = document.getElementById("result");
+
+  function showToast(message) {
+    const toast = document.getElementById("toast");
+    toast.textContent = message;
+    toast.style.display = "block";
+    setTimeout(() => {
+      toast.style.display = "none";
+    }, 3000);
+  }
+
+  // Cek apakah sudah pernah ngasih rating
+  if (localStorage.getItem("hasRated") === "true") {
+    submitBtn.disabled = true;
+    submitBtn.textContent = "Kamu sudah memberi rating";
+  }
+
+  function submitRating() {
+    const checked = ratingForm.querySelector('input[name="star"]:checked');
+
+    if (!checked) {
+      showToast("Pilih jumlah bintang dulu.");
+      return;
+    }
+
+    const ratingValue = parseInt(checked.value);
+
+    // Cegah rating dua kali
+    if (localStorage.getItem("hasRated") === "true") {
+      showToast("Kamu sudah pernah memberi rating.");
+      return;
+    }
+
+    // Simpan ke Firebase tanpa nama
+    const newRef = db.ref('ratings').push();
+    newRef.set({ value: ratingValue }).then(() => {
+      showToast("Terima kasih atas ratingnya!");
+      localStorage.setItem("hasRated", "true");
+      submitBtn.disabled = true;
+      submitBtn.textContent = "Kamu sudah memberi rating";
+      ratingForm.reset();
+    });
+  }
+
+  // Hitung dan tampilkan rata-rata rating
+  db.ref('ratings').on('value', snapshot => {
+    const data = snapshot.val();
+    if (!data) {
+      resultEl.textContent = "Belum ada rating.";
+      return;
+    }
+
+    const values = Object.values(data).map(r => r.value);
+    const total = values.reduce((a, b) => a + b, 0);
+    const avg = (total / values.length).toFixed(1);
+    resultEl.textContent = `⭐ ${avg} dari ${values.length} orang`;
+  });
+</script>
+
+<script>
+  const commentForm = document.getElementById("commentForm");
+  const commentName = document.getElementById("commentName");
+  const commentText = document.getElementById("commentText");
+  const commentList = document.getElementById("commentList");
+  const showMoreBtn = document.getElementById("showMoreBtn");
+
+  const maxVisible = 4;
+  let allComments = [];
+
+  function submitComment() {
+    const name = commentName.value.trim();
+    const text = commentText.value.trim();
+
+    if (!name || !text) {
+      alert("Isi nama dan komentar dulu.");
+      return;
+    }
+
+    const newComment = {
+      name: name,
+      text: text,
+      timestamp: Date.now()
+    };
+
+    db.ref("comments").push(newComment).then(() => {
+      commentForm.reset();
+      alert("Komentar berhasil dikirim!");
+    });
+  }
+
+  function timeAgo(timestamp) {
+    const now = Date.now();
+    const diff = Math.floor((now - timestamp) / 1000);
+
+    if (diff < 60) return `${diff} detik yang lalu`;
+    if (diff < 3600) return `${Math.floor(diff / 60)} menit yang lalu`;
+    if (diff < 86400) return `${Math.floor(diff / 3600)} jam yang lalu`;
+    if (diff < 2592000) return `${Math.floor(diff / 86400)} hari yang lalu`;
+
+    const date = new Date(timestamp);
+    return date.toLocaleDateString("id-ID", {
+      day: "numeric",
+      month: "long",
+      year: "numeric"
+    });
+  }
+
+  db.ref("comments").orderByChild("timestamp").on("value", snapshot => {
+    commentList.innerHTML = "";
+    allComments = [];
+
+    const data = snapshot.val();
+    if (!data) {
+      commentList.innerHTML = "<li>Belum ada komentar.</li>";
+      return;
+    }
+
+    allComments = Object.values(data).sort((a, b) => b.timestamp - a.timestamp);
+    renderComments(maxVisible);
+  });
+
+  function renderComments(count) {
+    commentList.innerHTML = "";
+    const shown = allComments.slice(0, count);
+
+    shown.forEach(comment => {
+      const li = document.createElement("li");
+      li.innerHTML = `
+        <strong>${comment.name}:</strong> ${comment.text}<br>
+        <small style="color:gray;">${timeAgo(comment.timestamp)}</small>
+      `;
+      commentList.appendChild(li);
+    });
+
+    if (allComments.length > count) {
+      showMoreBtn.style.display = "block";
+    } else {
+      showMoreBtn.style.display = "none";
+    }
+  }
+
+  function showMoreComments() {
+    renderComments(allComments.length);
+    showMoreBtn.style.display = "none";
+  }
 </script>
 </body>
 </html>
